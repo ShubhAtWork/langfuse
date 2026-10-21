@@ -3,6 +3,7 @@ import { getOrganizationPlanServerSide } from "@/src/features/entitlements/serve
 import { CloudConfigSchema, UnauthorizedError } from "@langfuse/shared";
 import { prisma, type PrismaClient } from "@langfuse/shared/src/db";
 import {
+  aiGatewayIngestionApiKey,
   type ApiAccessScopeWithOptionalApiKeyId,
   logger,
 } from "@langfuse/shared/src/server";
@@ -191,7 +192,7 @@ export async function verifyGatewayIngestionAuthorization(
       orgId: project.organization.id,
       plan: getOrganizationPlanServerSide(cloudConfig),
       rateLimitOverrides: cloudConfig?.rateLimitOverrides ?? [],
-      publicKey: `gateway:${claims.jti}`,
+      publicKey: aiGatewayIngestionApiKey(claims.jti),
       isIngestionSuspended:
         project.organization.cloudFreeTierUsageThresholdState === "BLOCKED",
       isInAppAgentKey: false,
