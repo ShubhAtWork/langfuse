@@ -1359,6 +1359,111 @@ json_literal    = "<price_per_mtok>e-6"
   per-model numeric rows for any Claude model (standing limitation); TypeSafe's Jev page
   confirms `jev-1.13.0`/`jev-1.14.0` unchanged at $42/Btok input, output free.
 
+- **October 23, 2026 audit: no price or catalog drift; resolved the "shutdown
+  date falls on the audit's own run date" boundary case for the Legacy GPT
+  model snapshots batch; three more OpenAI deprecation batches corroborated
+  for future tracking** — Re-fetched the full Anthropic pricing page (model
+  table, cache-hits footnote, Fast mode table, Batch table, tool-use table),
+  the Anthropic model-deprecations page (full "Model status" table),
+  `https://developers.openai.com/api/docs/pricing` (every `gpt-6`/`gpt-5.6`/
+  `gpt-5.5`/`gpt-5.4`/`gpt-5.3-codex`/`gpt-5.2`/`gpt-5.1`/`gpt-5`/o-series/
+  `gpt-4.1`/`gpt-4o` row), `https://developers.openai.com/api/docs/deprecations`
+  (three independently-worded fetches), both Gemini pricing pages, the Gemini
+  models catalog, the Gemini deprecations page, the AWS Bedrock pricing page,
+  and the TypeSafe Jev models page. Every price checked — cross-verified
+  field-by-field against the live JSON with `jq` — matched exactly; no
+  pricing-file edits were needed. Two findings:
+  1. **The October 23, 2026 "Legacy GPT model snapshots" shutdown date landed
+     exactly on this audit's own run date (confirmed via
+     `date -u +%Y-%m-%dT00:00:00.000Z` = `2026-10-23T00:00:00.000Z`) — this is
+     a new boundary case the prior October 9/21 2026 entries only anticipated,
+     not yet observed.** A targeted fetch asked the page to state, verbatim,
+     which section heading this exact batch currently falls under. The answer:
+     it is still listed under **"Upcoming deprecations"**, in a subsection
+     titled "2026-04-22: Legacy GPT model snapshots" — OpenAI's own page has
+     not yet moved it to a past/shutdown section as of this run. Per the
+     removal criteria in `automated-audit.md` ("past its published retirement
+     or discontinuation date"), arriving at the date is not the same as being
+     past it, and the provider's own categorization agrees — so none of
+     `gpt-4.1-nano`/`gpt-4.1-nano-2025-04-14`, `gpt-4-0613`,
+     `gpt-4-1106-preview`, `gpt-3.5-turbo`/`gpt-3.5-turbo-0125`,
+     `o3-mini`/`o3-mini-2025-01-31`, `o4-mini`/`o4-mini-2025-04-16` were
+     removed from `openAIModels` this run. Lesson for future audits: when a
+     deprecation-page shutdown date exactly equals the run's own UTC date,
+     check whether the page's own section heading has moved the entry out of
+     "Upcoming" before treating it as removable — do not assume same-day
+     equals past, and do not assume same-day equals still-upcoming either;
+     ask the page directly. Re-check this exact page on the next run and
+     remove the still-listed IDs once the page's own heading confirms the
+     batch is no longer under "Upcoming deprecations" (keep their pricing
+     entries).
+  2. **Three more OpenAI deprecation batches found and independently
+     corroborated across two or three separately-worded fetches each** (all
+     future, none yet actionable):
+     - **April 1, 2027** — "2026-10-01: GPT-5.3-Codex, GPT-5.1, GPT-5.4-Nano":
+       `gpt-5.3-codex` → `gpt-6-sol`, `gpt-5.1` → `gpt-6-sol`, `gpt-5.4-nano`
+       → `gpt-6-luna`. All three are currently in `openAIModels`.
+     - **January 6, 2027** — "2026-10-01: Text-to-speech models": `tts-1`,
+       `tts-1-hd`, `gpt-4o-mini-tts-2025-03-20`, `gpt-4o-mini-tts-2025-12-15`
+       → `gpt-realtime-2.1-mini`. None of these are text/chat models or in
+       any selectable array; out of scope, no future action needed beyond
+       noting they exist.
+     - **December 11, 2026** — "2026-06-11: GPT-5 and o3 model deprecations":
+       `gpt-5-2025-08-07` and `o3-2025-04-16`, confirmed via a third,
+       narrowly-targeted fetch after a second broader fetch (deliberately
+       asked for the same Nov 2026–Apr 2027 date window as the first fetch)
+       failed to surface them — see the lesson below. Both IDs are currently
+       in `openAIModels` (as dated snapshots; their bare aliases `gpt-5` and
+       `o3` were not mentioned in any fetch, so likely unaffected). Not yet
+       actionable (49 days out from this run).
+     - **February 26, 2027** — "2026-08-26: Transcription models": `whisper-1`,
+       `gpt-4o-transcribe` → unspecified. Audio/transcription models, not in
+       any selectable text-generation array; out of scope.
+     - A previously-claimed **December 1, 2026** GPT Image models batch
+       (`gpt-image-1-mini`, `gpt-image-1.5`) from the first broad fetch was
+       **not independently re-confirmed** this run (image-generation models,
+       out of scope regardless, so not re-verified).
+  3. **New lesson: a single WebFetch asking for "every deprecation row in a
+     date range" can silently omit real rows that a narrower, single-model
+     fetch against the same page finds.** A fetch explicitly asking for every
+     row with a shutdown date between November 1, 2026 and April 30, 2027
+     returned only the January 14, 2027 and April 1, 2027 batches, omitting
+     the real December 11, 2026 and February 26, 2027 batches found by an
+     earlier broader fetch. A third fetch asking yes/no for four specific
+     model IDs (`gpt-5-2025-08-07`, `o3-2025-04-16`, `whisper-1`,
+     `gpt-4o-transcribe`) confirmed all four with consistent dates, resolving
+     the discrepancy as a fetch/summarization omission rather than a
+     hallucination in the first fetch. When a range-style deprecation fetch
+     disagrees with an earlier broader fetch, re-verify with a third,
+     model-ID-targeted fetch before deciding which result to trust — do not
+     assume the more narrowly-scoped request is automatically the more
+     reliable one.
+  No other drift was found: Anthropic's pricing table, Fast mode table, Batch
+  table, and tool-use table all matched the pricing file verbatim, including
+  every `claude-fable-5-1`/`claude-mythos-5-1`/`claude-opus-5-5`/
+  `claude-sonnet-5-5`/`claude-haiku-5-5` tier. The Anthropic model-deprecations
+  page's "Model status" table shows no new retirement beyond the 13 already
+  removed in the October 12, 2026 audit; `claude-sonnet-4-5-20250929` remains
+  only `Deprecated` (retirement November 30, 2026, not yet passed) and
+  `claude-haiku-4-5-20251001`'s "Not sooner than October 15, 2026" floor has
+  passed without a firm date (`Active`, `Deprecated: N/A`) — neither
+  actionable. Gemini: `gemini-4-argon` still at introductory pricing (steps up
+  December 1, 2026); `gemini-3.8-flash`/`gemini-3.6-flash` unchanged
+  (introductory through December 31, 2026); `gemini-3.5-flash-lite`,
+  `gemini-3.1-pro-preview`, `gemini-3.1-flash-lite`, `gemini-3-flash-preview`
+  all unchanged. `gemini-3.5-flash` and `gemini-3.7-flash` remain absent from
+  the models catalog page entirely and still show the same "permanent
+  alias, not shut down" lifecycle status on the deprecations page as the
+  October 21, 2026 entry describes (this run additionally found their release
+  dates: `gemini-3.5-flash` May 19, 2026; `gemini-3.7-flash` August 13, 2026)
+  — still left unresolved pending a human decision on a possible fourth
+  removal criterion. `gemini-2.5-pro`/`gemini-2.5-flash`/`gemini-2.5-flash-lite`
+  still show only the access-restriction notice, no shutdown date. AWS
+  Bedrock's pricing page again yielded no extractable per-model numeric rows
+  for any Claude model (standing limitation); TypeSafe's Jev page confirms
+  `jev-1.13.0`/`jev-1.14.0` unchanged at $42/Btok input, output free. No new
+  flagship text/chat/reasoning model was found on any provider.
+
 ## Provider Usage Keys
 
 Use [provider-usage-key-matrix.md](provider-usage-key-matrix.md) as the single

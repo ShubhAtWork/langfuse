@@ -12,10 +12,28 @@ audit date.
 
 ## Latest useful snapshot
 
-**Audit date:** 2026-10-21
+**Audit date:** 2026-10-23
 
 All prices listed as `$X / MTok` (per million tokens). Per-token JSON values: divide by 1,000,000.
 
+The 2026-10-23 run re-fetched the full Anthropic pricing page (model table, cache-hits
+footnote, Fast mode table, Batch table, tool-use table) and the Anthropic model-deprecations
+page (full "Model status" table), the OpenAI aggregate Standard pricing table, the OpenAI
+deprecations page (three independently-worded fetches), both Gemini pricing pages, the
+Gemini models catalog, the Gemini deprecations page, the AWS Bedrock pricing page, and the
+TypeSafe Jev models page. Every price was cross-checked field-by-field against the live
+pricing JSON with `jq` and matched exactly; no pricing-file edits were needed. This run
+landed exactly on the October 23, 2026 shutdown date of the "Legacy GPT model snapshots"
+batch tracked since October 9, 2026 — resolved as still not actionable, since the OpenAI
+deprecations page's own section heading still lists the batch under "Upcoming deprecations"
+as of this run (confirmed via a verbatim-quote fetch asking specifically which section the
+batch falls under). It also corroborated three further OpenAI deprecation batches (April 1,
+2027 for `gpt-5.3-codex`/`gpt-5.1`/`gpt-5.4-nano`; January 6, 2027 for `tts-1`-family models,
+out of scope; December 11, 2026 for `gpt-5-2025-08-07`/`o3-2025-04-16`) and found that a
+range-style deprecation-page fetch can silently omit real rows a narrower, model-ID-targeted
+fetch surfaces — see the detailed entries in `provider-sources-and-price-keys.md` for exact
+quotes, section headings, and the fetch-reliability lesson. No other price or catalog drift
+was found; no new flagship text/chat/reasoning model was found on any provider.
 The 2026-10-21 run re-fetched the full Anthropic pricing page (model table, cache-hits
 footnote, Fast mode table, Batch table) and the Anthropic model-deprecations page (full
 "Model status" table), the OpenAI aggregate Standard pricing table (every
